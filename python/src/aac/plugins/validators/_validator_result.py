@@ -33,7 +33,18 @@ class ValidatorResult:
         def format_message(finding: ValidatorFinding) -> str:
             loc = finding.location
             return (
-                f"\nValidation {finding.severity.name} from '{loc.validation_name}' in {loc.source.uri}. {finding.message}"
+                f"\nValidation {finding.severity.name} from '{loc.validation_name}' in {loc.source.uri} "
+                f"at {loc.location.line + 1}:{loc.location.column} {finding.message}"
             )
 
-        return "\n".join([format_message(finding) for finding in self.findings.get_all_findings()])
+        valid_files_output = ""
+
+        if self.is_valid():
+            definition_sources = []
+            for definition in self.definitions:
+                if definition.source.uri not in definition_sources:
+                    definition_sources.append(definition.source.uri)
+
+            valid_files_output = "\nThe following additional definition files have been validated:\n" + "\n".join(definition_file for definition_file in definition_sources)
+
+        return f"{valid_files_output}\n" + "\n".join([format_message(finding) for finding in self.findings.get_all_findings()])
